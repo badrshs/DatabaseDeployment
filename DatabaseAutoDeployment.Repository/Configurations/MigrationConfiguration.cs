@@ -8,11 +8,10 @@ namespace DatabaseAutoDeployment.Repository.Configurations
     {
         public void Configure(EntityTypeBuilder<Migration> builder)
         {
-            builder.ToTable("Migration", "Migration");
+            builder.ToTable("Tables", "Migration");
 
-            builder.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(1000);
+            builder.Property(e => e.ScriptName)
+                .IsRequired();
         }
     }
 }

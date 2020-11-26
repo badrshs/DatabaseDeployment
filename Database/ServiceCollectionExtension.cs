@@ -1,10 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
-using System.Security.Claims;
-using DatabaseAutoDeployment.Repository;
+﻿using DatabaseAutoDeployment.Repository;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Database
@@ -24,17 +19,6 @@ namespace Database
         /// <returns></returns>
         public static IServiceCollection RegisterSqlDatabase<T>(this IServiceCollection services, string connectionString, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped) where T : DbContext =>
             services.RegisterSqlDatabaseAndUnitOfWork<T>(connectionString, serviceLifetime);
-
-        /// <summary>
-        /// Registers the services.
-        /// </summary>
-        /// <param name="services">The services.</param>
-        /// <param name="configuration">The configuration.</param>
-        /// <returns></returns>
-        public static IServiceCollection RegisterServices(this IServiceCollection services, IConfiguration configuration)
-        {
-            return services;
-        }
 
         /// <summary>
         /// Registers the SQL database and unit of work.

@@ -1,9 +1,7 @@
-﻿using System;
-
-namespace DatabaseAutoDeployment.Entity
+﻿namespace DatabaseAutoDeployment.Entity
 {
     public class Migration : BaseEntity
     {
-        public string Name { get; set; }
+        public string ScriptName { get; set; }
     }
 }
