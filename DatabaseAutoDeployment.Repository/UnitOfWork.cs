@@ -1,29 +1,40 @@
 ﻿using DatabaseAutoDeployment.Entity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
+using Microsoft.SqlServer.Management.Common;
+using Microsoft.SqlServer.Management.Smo;
 
 namespace DatabaseAutoDeployment.Repository
 {
     /// <summary>
-    /// 
+    /// UnitOfWork
     /// </summary>
     /// <typeparam name="TContext">The type of the context.</typeparam>
+    /// <seealso cref="DatabaseAutoDeployment.Repository.IUnitOfWork" />
     /// <seealso cref="IUnitOfWork" />
     public class UnitOfWork<TContext> : IUnitOfWork where TContext : DbContext
     {
+        /// <summary>
+        /// The disposed
+        /// </summary>
         private bool _disposed;
+        /// <summary>
+        /// The context
+        /// </summary>
         private readonly TContext _context;
+        /// <summary>
+        /// The logger
+        /// </summary>
         private readonly ILogger<UnitOfWork<TContext>> _logger;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UnitOfWork{TContext}"/> class.
+        /// Initializes a new instance of the <see cref="UnitOfWork{TContext}" /> class.
         /// </summary>
         /// <param name="dbContext">The database context.</param>
         /// <param name="logger">The logger.</param>
@@ -33,32 +44,41 @@ namespace DatabaseAutoDeployment.Repository
             _logger = logger;
         }
 
-        /// <inheritdoc/>
-        public virtual List<T> Get<T>() where T : class, IBaseEntity => _context.Set<T>().Where(e => e.IsDeleted == false).ToList();
-
-        /// <inheritdoc/>
-        public virtual List<T> Get<T>(Expression<Func<T, bool>> expression) where T : class, IBaseEntity => Query(expression).ToList();
-
+        /// <summary>
+        /// Creates the database.
+        /// </summary>
         public void CreateDatabase()
         {
             _context.Database.EnsureCreated();
         }
 
-        /// <inheritdoc/>
-        public virtual void Add<T>(T entity) where T : class, IBaseEntity => _context.Add(entity);
+        public string GetConnectionString() => _context.Database.GetConnectionString();
 
-        /// <inheritdoc/>
-        public Task<List<T>> GetAsync<T>() where T : class, IBaseEntity => _context.Set<T>().Where(e => e.IsDeleted == false).ToListAsync();
+        /// <summary>
+        /// can connect to the database.
+        /// </summary>
+        public Task<bool> CanConnectAsync() => _context.Database.CanConnectAsync();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Gets the entity asynchronously.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public List<T> Get<T>() where T : class, IBaseEntity => _context.Set<T>().Where(e => e.IsDeleted == false).ToList();
+
+        /// <summary>
+        /// Updates the specified entity.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity">The entity.</param>
         public virtual void Update<T>(T entity) where T : class, IBaseEntity => _context.Update(entity);
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Deletes the specified entity.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity">The entity.</param>
         public virtual void Delete<T>(T entity) where T : class, IBaseEntity => _context.Remove(entity);
-
-        /// <inheritdoc/>
-        public Task<List<T>> GetAsync<T>(Expression<Func<T, bool>> expression) where T : class, IBaseEntity =>
-            _context.Set<T>().Where(e => e.IsDeleted == false).Where(expression).ToListAsync();
 
         /// <summary>
         /// Delete the entity in a soft manner.
@@ -71,89 +91,55 @@ namespace DatabaseAutoDeployment.Repository
             Update(entity);
         }
 
-        /// <inheritdoc/>
-        public virtual T FirstOrDefault<T>(Expression<Func<T, bool>> expression) where T : class, IBaseEntity =>
-            Query(expression).FirstOrDefault();
-
-        /// <inheritdoc/>
-        public virtual Task<T> FirstOrDefaultAsync<T>(Expression<Func<T, bool>> expression)
-            where T : class, IBaseEntity => Query(expression).FirstOrDefaultAsync();
-
-        /// <inheritdoc/>
-        public virtual IQueryable<T> Query<T>(Expression<Func<T, bool>> expression) where T : class, IBaseEntity => _context.Set<T>().Where(e => e.IsDeleted == false).Where(expression);
-
-        /// <inheritdoc/>
-        public virtual IQueryable<T> Query<T>() where T : class, IBaseEntity => _context.Set<T>().Where(e => e.IsDeleted == false);
-
         /// <summary>
-        /// Check if any entity exist asynchronously.
+        /// Queries the specified expression.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="expression">The expression.</param>
         /// <returns></returns>
-        public Task<bool> AnyAsync<T>(Expression<Func<T, bool>> expression) where T : class, IBaseEntity =>
-            _context.Set<T>().Where(e => e.IsDeleted == false).AnyAsync(expression);
+        public virtual IQueryable<T> Query<T>(Expression<Func<T, bool>> expression) where T : class, IBaseEntity => _context.Set<T>().Where(e => e.IsDeleted == false).Where(expression);
 
-        /// <inheritdoc/>
+
+        /// <summary>
+        /// Adds the specified entity.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity">The entity.</param>
+        public virtual void Add<T>(T entity) where T : class, IBaseEntity => _context.Add(entity);
+
+        /// <summary>
+        /// Saves this instance.
+        /// </summary>
         public void Save() => _context.SaveChanges();
 
         /// <summary>
-        /// Saves the asynchronously.
+        /// Saves this instance.
         /// </summary>
-        /// <returns></returns>
-        public virtual Task SaveAsync() => _context.SaveChangesAsync();
-
-        /// <summary>
-        /// Executes the in transaction asynchronously.
-        /// </summary>
-        /// <param name="action">The action.</param>
-        /// <returns></returns>
-        public virtual Task ExecuteInTransactionAsync(Func<IUnitOfWork, Task> action) => ExecuteInTransactionAsync(action, IsolationLevel.ReadCommitted);
-
-        /// <summary>
-        /// Executes the in transaction asynchronously.
-        /// </summary>
-        /// <param name="action">The action.</param>
-        /// <param name="isolationLevel">The isolation level.</param>
-        /// <returns></returns>
-        public virtual Task ExecuteInTransactionAsync(Func<IUnitOfWork, Task> action, IsolationLevel isolationLevel)
+        public bool ExecuteSqlRaw(string sql)
         {
-            IExecutionStrategy strategy = _context.Database.CreateExecutionStrategy();
-
-            return strategy.ExecuteAsync(async () =>
-            {
-                using (IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync(isolationLevel))
-                {
-                    try
-                    {
-                        // Execute the action itself
-                        await action(this);
-
-                        // save changes.
-                        await SaveAsync();
-
-                        transaction.Commit();
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogError(e, "Transaction failed while creating an execution strategy.");
-                        _logger.LogWarning("Trying to rollback...");
-                        transaction.Rollback();
-                        _logger.LogWarning("Rollback successfully!");
-                        throw;
-                    }
-                }
-            });
+            SqlConnection conn = new SqlConnection(_context.Database.GetConnectionString());
+            Server server = new Server(new ServerConnection(conn));
+            server.ConnectionContext.ExecuteNonQuery(sql);
+            return true;
         }
 
         /// <summary>
-        /// Adds the range asynchronously.
+        /// Ensures the created asynchronous.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="entities">The entities.</param>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public Task AddRangeAsync<T>(IEnumerable<T> entities) where T : class, IBaseEntity => _context.AddRangeAsync(entities);
+        public void EnsureCreated() => _context.Database.EnsureCreated();
+
+        /// <summary>
+        /// Migrates the asynchronous.
+        /// </summary>
+        /// <returns></returns>
+        public Task MigrateAsync() => _context.Database.MigrateAsync();
+
+        /// <summary>
+        /// Migrates the asynchronous.
+        /// </summary>
+        /// <param name="connectionString"></param>
+        public void SetConnectionString(string connectionString) => _context.Database.SetConnectionString(connectionString);
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

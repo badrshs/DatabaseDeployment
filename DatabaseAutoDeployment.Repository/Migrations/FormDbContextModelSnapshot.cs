@@ -32,12 +32,12 @@ namespace DatabaseAutoDeployment.Repository.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("OriginalPath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ScriptName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 

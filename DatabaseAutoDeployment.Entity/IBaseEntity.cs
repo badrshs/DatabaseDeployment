@@ -30,14 +30,6 @@ namespace DatabaseAutoDeployment.Entity
         /// <value>
         /// The identifier.
         /// </value>
-        DateTime UpdatedAt { get; set; }
-
-        /// <summary>
-        /// Gets or sets the identifier.
-        /// </summary>
-        /// <value>
-        /// The identifier.
-        /// </value>
         bool IsDeleted { get; set; }
     }
 }

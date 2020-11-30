@@ -28,8 +28,6 @@ namespace Database
 
             using ServiceProvider serviceProvider = services.BuildServiceProvider();
             var form1 = serviceProvider.GetRequiredService<Form1>();
-            var context = serviceProvider.GetRequiredService<FormDbContext>();
-            context.Database.Migrate();
             Application.Run(form1);
         }
 

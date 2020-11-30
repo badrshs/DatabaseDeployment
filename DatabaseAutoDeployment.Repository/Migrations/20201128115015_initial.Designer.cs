@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DatabaseAutoDeployment.Repository.Migrations
 {
     [DbContext(typeof(FormDbContext))]
-    [Migration("20201126093032_initilize")]
-    partial class Initilize
+    [Migration("20201128115015_initial")]
+    partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -34,12 +34,12 @@ namespace DatabaseAutoDeployment.Repository.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("OriginalPath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ScriptName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
