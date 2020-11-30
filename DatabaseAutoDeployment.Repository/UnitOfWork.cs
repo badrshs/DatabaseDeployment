@@ -1,40 +1,44 @@
 ﻿using DatabaseAutoDeployment.Entity;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.SqlServer.Management.Common;
+using Microsoft.SqlServer.Management.Smo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Microsoft.Data.SqlClient;
-using Microsoft.SqlServer.Management.Common;
-using Microsoft.SqlServer.Management.Smo;
 
 namespace DatabaseAutoDeployment.Repository
 {
+
     /// <summary>
     /// UnitOfWork
     /// </summary>
     /// <typeparam name="TContext">The type of the context.</typeparam>
-    /// <seealso cref="DatabaseAutoDeployment.Repository.IUnitOfWork" />
     /// <seealso cref="IUnitOfWork" />
     public class UnitOfWork<TContext> : IUnitOfWork where TContext : DbContext
     {
+
         /// <summary>
         /// The disposed
         /// </summary>
         private bool _disposed;
+
         /// <summary>
         /// The context
         /// </summary>
         private readonly TContext _context;
+
         /// <summary>
         /// The logger
         /// </summary>
         private readonly ILogger<UnitOfWork<TContext>> _logger;
 
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="UnitOfWork{TContext}" /> class.
+        /// Initializes a new instance of the <see cref="UnitOfWork{TContext}"/> class.
         /// </summary>
         /// <param name="dbContext">The database context.</param>
         /// <param name="logger">The logger.</param>
@@ -45,18 +49,15 @@ namespace DatabaseAutoDeployment.Repository
         }
 
         /// <summary>
-        /// Creates the database.
+        /// Gets the connection string.
         /// </summary>
-        public void CreateDatabase()
-        {
-            _context.Database.EnsureCreated();
-        }
-
+        /// <returns></returns>
         public string GetConnectionString() => _context.Database.GetConnectionString();
 
         /// <summary>
-        /// can connect to the database.
+        /// Determines whether this instance [can connect asynchronous].
         /// </summary>
+        /// <returns></returns>
         public Task<bool> CanConnectAsync() => _context.Database.CanConnectAsync();
 
         /// <summary>
@@ -81,7 +82,7 @@ namespace DatabaseAutoDeployment.Repository
         public virtual void Delete<T>(T entity) where T : class, IBaseEntity => _context.Remove(entity);
 
         /// <summary>
-        /// Delete the entity in a soft manner.
+        /// Softs the delete.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="entity">The entity.</param>
@@ -99,7 +100,6 @@ namespace DatabaseAutoDeployment.Repository
         /// <returns></returns>
         public virtual IQueryable<T> Query<T>(Expression<Func<T, bool>> expression) where T : class, IBaseEntity => _context.Set<T>().Where(e => e.IsDeleted == false).Where(expression);
 
-
         /// <summary>
         /// Adds the specified entity.
         /// </summary>
@@ -108,13 +108,16 @@ namespace DatabaseAutoDeployment.Repository
         public virtual void Add<T>(T entity) where T : class, IBaseEntity => _context.Add(entity);
 
         /// <summary>
-        /// Saves this instance.
+        /// Saves the asynchronously.
         /// </summary>
         public void Save() => _context.SaveChanges();
 
         /// <summary>
-        /// Saves this instance.
+        /// Executes the SQL raw.
         /// </summary>
+        /// <param name="sql">The SQL.</param>
+        /// <returns></returns>
+        //todo: find a way to ExecuteNonQuery from dbContext 
         public bool ExecuteSqlRaw(string sql)
         {
             SqlConnection conn = new SqlConnection(_context.Database.GetConnectionString());
@@ -126,7 +129,6 @@ namespace DatabaseAutoDeployment.Repository
         /// <summary>
         /// Ensures the created asynchronous.
         /// </summary>
-        /// <returns></returns>
         public void EnsureCreated() => _context.Database.EnsureCreated();
 
         /// <summary>
@@ -136,9 +138,9 @@ namespace DatabaseAutoDeployment.Repository
         public Task MigrateAsync() => _context.Database.MigrateAsync();
 
         /// <summary>
-        /// Migrates the asynchronous.
+        /// Sets the connection string.
         /// </summary>
-        /// <param name="connectionString"></param>
+        /// <param name="connectionString">The connection string.</param>
         public void SetConnectionString(string connectionString) => _context.Database.SetConnectionString(connectionString);
 
         /// <summary>

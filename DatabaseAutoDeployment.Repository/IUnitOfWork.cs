@@ -1,11 +1,7 @@
-﻿using System;
+﻿using DatabaseAutoDeployment.Entity;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
-using DatabaseAutoDeployment.Entity;
-using Microsoft.EntityFrameworkCore;
 
 namespace DatabaseAutoDeployment.Repository
 {
@@ -40,12 +36,6 @@ namespace DatabaseAutoDeployment.Repository
         /// </summary>
         /// <returns></returns>
         void EnsureCreated();
-
-        /// <summary>
-        /// Migrates the asynchronous.
-        /// </summary>
-        /// <returns></returns>
-        Task MigrateAsync();
 
         /// <summary>
         /// Sets the connection string.
